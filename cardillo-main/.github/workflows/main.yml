@@ -1,0 +1,41 @@
+name: Build tests
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+      - cardillo-core
+
+jobs:
+  build:
+    name: Build project
+    # runs-on: [self-hosted, linux]
+    runs-on: [ubuntu-latest]  
+    # TODO do we want to test on variou systems and versions?
+    # TODO: fix authentication in container
+    # container: 
+    #   image: python:latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12' 
+        # cache: 'pip' # caching pip dependencies
+        # cache-dependency-path: setup.py
+    - name: Upgrade pip and setuptools
+      run: pip install --upgrade pip setuptools
+    - name: install dependencies
+      run: pip install -e .
+    - name: install test dependencies
+      run: pip install pytest
+    - name: test with pytest
+      run: pytest ./test/
+    
+    # TODO save artifacts
+    # - name: upload artifacts
+    #   uses: actions/upload-artifacts@v3
+    #   with:
+    #     name: figures
+    #     path: TODO

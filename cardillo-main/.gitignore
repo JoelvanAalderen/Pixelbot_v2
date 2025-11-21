@@ -1,0 +1,56 @@
+# vs code settings
+.vscode
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# documentation build
+docs/_build
+build/
+public/
+
+# pytest
+.pytest_cache/
+*.pyc
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.coverage
+
+# ignore log files
+*.log
+
+# numpy arrays
+*.npy
+*.npz
+
+# exported data
+*.txt
+*.dat
+
+# videos
+*.mp4
+*.avi
+
+# jupyter cache
+.jupyter_cache/
+jupyter_execute/
+
+.mypy_cache
+
+# vtk files
+*.vtk
+*.vtu
+*.pvd
+
+# results
+examples/results
+
+# virtual environment
+myvenv
+
+
+solutions/
