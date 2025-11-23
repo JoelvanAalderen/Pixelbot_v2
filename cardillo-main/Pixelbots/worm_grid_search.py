@@ -37,7 +37,7 @@ def get_placement():
 def ground_func(mode="walker"):
     if mode == "walker":
         x_vals = np.linspace(-0.1, 2, 4)
-        angle = 0.0 #16.3 degrees is static for single pixel
+        angle = -10.0 #16.3 degrees is static for single pixel
         y_vals = np.tan(np.deg2rad(angle))*x_vals # 0.02 * np.sin(200 * x_vals)-0.02 # 0.0006 * np.sin(200 * x_vals)-0.0006 #
         
         points = [np.array([x, y]) for x, y in zip(x_vals, y_vals)]
@@ -60,7 +60,7 @@ def ground_func(mode="walker"):
 
 
 ## sim function for a part of bots
-def run_bot_part(sim_id, bot_part, pixel_size, Placement, mass_values, stiffness_values, A_values, n_pixel_types, period, dt, t_final, start_p_position, start_p_angle, save_folder="solutions/worm_grid_search/flat_ground/0001_06max(natural_omega)/"):
+def run_bot_part(sim_id, bot_part, pixel_size, Placement, mass_values, stiffness_values, A_values, n_pixel_types, period, dt, t_final, start_p_position, start_p_angle, save_folder="solutions/worm_grid_search/slanted_down_ground/0001_010max(natural_omega)/"):
     if not bot_part:
         print("Empty bot part, skipping simulation")
         return []
@@ -210,16 +210,16 @@ if __name__ == "__main__":
     total_pixel_types = len(np.unique(get_placement())) - 1
 
 
-    n_cores = 1 #nr of parallel sim
-    n_omega_options = 3
-    n_phi_options = 3
+    n_cores = 8 #nr of parallel sim
+    n_omega_options = 10
+    n_phi_options = 10
 
 
     ## Main setup
     pixel_size = 0.01
     Placement = get_placement()
     start_p_position = (0.0, 0.0)
-    start_p_angle = np.deg2rad(0.0)
+    start_p_angle = np.deg2rad(-10.0)
     stiffness_values = [3400]*n_pixel_types + [4200, 9200]
     mass_values = [0.000852]*n_pixel_types + [0.000972, 0.000989]
     A_values = [0.6]*n_pixel_types + [0.0, 0.0]
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     bot_configs = []
     global_id = 0
     ## make all bot configurations grid_search
-    omega_values = np.linspace(0.001*max(natural_omega), 0.6*max(natural_omega), n_omega_options)
+    omega_values = np.linspace(0.001*max(natural_omega), 0.10*max(natural_omega), n_omega_options)
     phi_values = np.linspace(0, 5, n_phi_options)
     for omega in omega_values: #itertools.product(omega_values, repeat=n_pixel_types):
         for phi in phi_values: #itertools.product(phi_values, repeat=n_pixel_types):

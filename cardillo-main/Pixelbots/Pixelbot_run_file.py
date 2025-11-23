@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ## Ground points and vectors initialized
     def ground_func(xmin=-1.0, xmax=10.0, nrpoints=10):
         x_vals = np.linspace(xmin, xmax, nrpoints)
-        angle = 0 #16.3 degrees is static for single pixel
+        angle = -10 #16.3 degrees is static for single pixel
         y_vals =  np.tan(np.deg2rad(angle))*x_vals # 0.0006 * np.sin(200 * x_vals)-0.0006 #
         points = [np.array([x, y]) for x, y in zip(x_vals, y_vals)]
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     ## set up system and solver
     system = System()
-    system.add(MultiPixel, Ground_contact, mass_mass_contact)
+    system.add(MultiPixel, Ground_contact)#, mass_mass_contact)
     system.assemble(options=SolverOptions(compute_consistent_initial_conditions=False))   
                                                        
     solver = Moreau(system, t_final, dt)                                  

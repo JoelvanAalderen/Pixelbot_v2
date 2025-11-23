@@ -11,8 +11,8 @@ import re, mplcursors
 def plot_all_sim():
     # Load the solution
     cwd = Path.cwd()
-    filename = "full_solution_of_sim_0_bots_0-8.pkl"
-    pkl_path = cwd / "solutions" / "climber_grid_search" / "flat_ground" / "0001_06max(natural_omega)" / filename
+    filename = "full_solution_of_sim_4_bots_52-63.pkl"
+    pkl_path = cwd / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)" / filename
 
     match = re.search(r'bots_(\d+)-(\d+)\.pkl', filename)
     if not match:
@@ -203,7 +203,7 @@ def plot_omega_phi_over_comdx():
     # plot omega and phi over com dx
 
     # load all files
-    results_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_06max(natural_omega)"
+    results_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)"
     pkl_files = list(results_folder.glob("full_solution_of_sim_*_bots_*.pkl"))
 
     all_bot_id = []
@@ -300,8 +300,92 @@ def plot_omega_phi_over_comdx():
     return plt.show()
 
 
+def results_table():
+
+    sim_folders = [
+        Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)",
+        Path.cwd() / "solutions" / "worm_grid_search" / "slanted_down_ground" / "0001_010max(natural_omega)"
+    ]
+    
+    bot_data = {}
+
+    for folder in sim_folders:
+        pkl_files = list(folder.glob("full_solution_of_sim_*_bots_*.pkl"))
+
+        for pkl_file in pkl_files:
+            full_sol = load_solution(pkl_file)
+            system = full_sol.system
+            t = full_sol.t
+            q = full_sol.q
+
+            bot_names = sorted([n for n in system.contributions_map if n.startswith("bot_")])
+            bots = [system.contributions_map[n] for n in bot_names]
+
+            for bot in bots:
+                bot_id = bot.global_id
+                bot_dofs = np.unique(bot.pixelDOF.flatten())
+
+                comx_list = []
+                comy_list = []
+                for k in range(len(t)):
+                    q_bot = q[k, bot_dofs]
+                    cx, cy = bot.center_of_mass(t[k], q_bot)
+                    cx += bot.start_p_position[0]
+                    cy += bot.start_p_position[1]
+                    comx_list.append(cx)
+                    comy_list.append(cy)
+
+                final_dx = comx_list[-1] - comx_list[0]
+                final_com_y = comy_list[-1]
+
+                # Omega and Phi for actuated pixels
+                n_actuated = len(bot.pixel_prop) # -2
+                phi_val = [bot.pixel_prop[j+1]["phi"] for j in range(1, n_actuated+1)]
+                omega_val = [bot.pixel_prop[j+1]["omega"] for j in range(1, n_actuated+1)]
+
+                if bot_id not in bot_data:
+                    bot_data[bot_id] = {
+                        "dx_list": [],
+                        "omega": omega_val,
+                        "phi": phi_val,
+                        "comy_list": []
+                    }
+                bot_data[bot_id]["dx_list"].append(final_dx)
+                bot_data[bot_id]["comy_list"].append(final_com_y)  # store COM y for info
+
+    # Compute average dx
+    avg_dx_info = []
+    for bot_id, data in bot_data.items():
+        avg_dx = np.mean(data["dx_list"])
+        avg_comy = np.mean(data["comy_list"])
+        avg_dx_info.append({
+            "Bot ID": bot_id,
+            "avg_dx": avg_dx,
+            "avg_com_y": avg_comy,
+            "omega": data["omega"],
+            "phi": data["phi"]
+        })
+
+    # Sort by average dx descending
+    avg_dx_info_sorted = sorted(avg_dx_info, key=lambda x: x['avg_dx'], reverse=True)
+
+    # Print table including average COM y
+    print(f"{'Bot ID':>7} | {'Avg dx':>10} | {'Avg COM y':>10} | {'Omega':>20} | {'Phi':>20}")
+    print("-"*80)
+    for entry in avg_dx_info_sorted:
+        omega_str = str([round(o,2) for o in entry['omega']])
+        phi_str   = str([round(p,2) for p in entry['phi']])
+        print(f"{entry['Bot ID']:7} | {entry['avg_dx']:10.5f} | {entry['avg_com_y']:10.5f} | {omega_str:20} | {phi_str:20}")
+
+    return avg_dx_info_sorted
+
+
 
 if __name__ == "__main__":
-    plot_all_sim()
+    # plot_all_sim()
     # plot_omega_phi_over_comdx()
+
+    dx_info = results_table()
+    # for dx in dx_info[:5]:
+    #     print(dx)
 

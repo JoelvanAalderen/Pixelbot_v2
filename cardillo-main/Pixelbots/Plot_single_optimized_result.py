@@ -8,11 +8,11 @@ from cardillo.solver import load_solution
 
 # Load the solution
 cwd = Path.cwd()
-pkl_path = cwd / "solutions" / "walker_grid_search" / "flat_ground" / "0001_06max(natural_omega)" / "full_solution_of_sim_0_bots_0-8.pkl"
+pkl_path = cwd / "solutions" / "worm_grid_search" / "slanted_down_ground" / "0001_010max(natural_omega)" / "full_solution_of_sim_3_bots_39-51.pkl"
 
 full_sol = load_solution(pkl_path)
 system = full_sol.system
-MultiPixel = full_sol.system.contributions_map["bot_2"]
+MultiPixel = full_sol.system.contributions_map["bot_39"]
 contact_name = f"contact_{MultiPixel.name}"
 contact = full_sol.system.contributions_map[contact_name]
 
