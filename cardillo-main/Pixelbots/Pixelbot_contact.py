@@ -7,10 +7,8 @@ from scipy.spatial import ConvexHull
 
 ## Pixelbot contact class
 class Pixelbot_contact:   
-    def __init__(self, MultiPixelbot, ground_func, offset, name):
+    def __init__(self, MultiPixelbot, ground_func, name):
         self.name = name
-
-        self.offset = offset
 
         # define necessary variables from pixelbot class
         self.MultiPixelbot = MultiPixelbot
@@ -52,7 +50,7 @@ class Pixelbot_contact:
         gaps = np.full(self.nla_N, np.inf, dtype=float)
 
         for k, i in enumerate(self.outer_masses):
-            p_mass = np.asarray(q[2*i:2*i+2], dtype=float) + self.offset
+            p_mass = np.asarray(q[2*i:2*i+2], dtype=float)
             best_dist = np.inf
             best_gap = np.inf
             best_normal = np.array([0.0, 1.0], dtype=float)

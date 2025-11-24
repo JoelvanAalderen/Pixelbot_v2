@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ## Ground points and vectors initialized
     def ground_func(xmin=-1.0, xmax=10.0, nrpoints=10):
         x_vals = np.linspace(xmin, xmax, nrpoints)
-        angle = -10 #16.3 degrees is static for single pixel
+        angle = 10 #16.3 degrees is static for single pixel
         y_vals =  np.tan(np.deg2rad(angle))*x_vals # 0.0006 * np.sin(200 * x_vals)-0.0006 #
         points = [np.array([x, y]) for x, y in zip(x_vals, y_vals)]
 
@@ -49,13 +49,13 @@ if __name__ == "__main__":
     #     [3, 0, 0, 0, 4],
     #     [7, 0, 0, 0, 7]
     # ], dtype=int)
-    Placement = np.array([
-        [0, 0, 0, 0, 0],
-        [0, 0, 7, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 7, 7, 0]
-    ], dtype=int)
+    # Placement = np.array([
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 7, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 7, 7, 0]
+    # ], dtype=int)
     # Placement = np.array([
     #     [7, 8, 6, 2, 7],
     #     [7, 5, 6, 1, 7],
@@ -77,17 +77,24 @@ if __name__ == "__main__":
     #     [3, 6, 7, 6, 2],
     #     [3, 6, 4, 6, 2],
     # ], dtype=int)
+    Placement = np.array([
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5]
+    ], dtype=int)
 
 
     ## Define pixel properties
     pixel_size = 0.01
 
     pixel_prop = {
-        1: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 0}, #0.01*np.sqrt(3400/0.000852)
-        2: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 1*np.pi},
-        3: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 0.25*np.pi},
-        4: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 1.25*np.pi},
-        5: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 0.4*np.pi},
+        1: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  69.05, "phi": 0}, #0.01*np.sqrt(3400/0.000852)
+        2: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  69.05, "phi": 0.7},
+        3: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  69.05, "phi": 1.4},
+        4: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  69.05, "phi": 2.09},
+        5: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  69.05, "phi": 2.79},
         8: {"mass": 0.000852, "stiffness": 3400, "A": 0.6, "omega":  0.01*np.sqrt(3400/0.000852), "phi": 1.4*np.pi},
         6: {"mass": 0.000972, "stiffness": 4200, "A": 0.0, "omega": 2*np.pi*0.4, "phi": 0},
         7: {"mass": 0.000989, "stiffness": 9200, "A": 0.0, "omega": 2*np.pi*0.4, "phi": 0},  
@@ -103,7 +110,7 @@ if __name__ == "__main__":
     print(t_final)
 
     start_p_position = (0.0, 0.0)
-    start_p_angle = np.deg2rad(0)
+    start_p_angle = np.deg2rad(10)
     bot_name = "bot1"
 
     ## Run combined system
@@ -120,7 +127,6 @@ if __name__ == "__main__":
     Ground_contact = Pixelbot_contact(
         MultiPixel, 
         ground_func,
-        offset=[0,0],
         name="contact_ground"
     )
 
@@ -286,13 +292,13 @@ if __name__ == "__main__":
         Y = q_frame[1::2]
         
         gaps = Ground_contact.g_full(t[frame], q_frame)
-        gaps_mass = mass_mass_contact.g_full(t[frame], q_frame)
+        # gaps_mass = mass_mass_contact.g_full(t[frame], q_frame)
         colors = ['#4477AA']*len(X)
         
-        for idx, g in enumerate(gaps_mass):
-            if g < 1e-3:
-                    colors[idx] = '#66CCEE'
-                    # colors[j1] = colors[j2] = "#FF0000"
+        # for idx, g in enumerate(gaps_mass):
+        #     if g < 1e-3:
+        #             colors[idx] = '#66CCEE'
+        #             # colors[j1] = colors[j2] = "#FF0000"
 
          
         for idx, g in enumerate(gaps):
@@ -313,41 +319,41 @@ if __name__ == "__main__":
         time_text.set_text(f't = {t[frame]:.3f} s')
 
            # ===== DEBUG: Mass trio 4 =====
-        i, j1, j2 = mass_mass_contact.mass_trios[4]
+        # i, j1, j2 = mass_mass_contact.mass_trios[4]
 
-        pi  = np.array([X[i],  Y[i]])
-        pj1 = np.array([X[j1], Y[j1]])
-        pj2 = np.array([X[j2], Y[j2]])
+        # pi  = np.array([X[i],  Y[i]])
+        # pj1 = np.array([X[j1], Y[j1]])
+        # pj2 = np.array([X[j2], Y[j2]])
 
-        # draw the three points
-        ax_main.scatter([pi[0], pj1[0], pj2[0]],
-                        [pi[1], pj1[1], pj2[1]],
-                        s=80, c=["red","orange","yellow"])
+        # # draw the three points
+        # ax_main.scatter([pi[0], pj1[0], pj2[0]],
+        #                 [pi[1], pj1[1], pj2[1]],
+        #                 s=80, c=["red","orange","yellow"])
 
-        # draw the edge j1–j2
-        ax_main.plot([pj1[0], pj2[0]],
-                    [pj1[1], pj2[1]],
-                    "g-", lw=2)
+        # # draw the edge j1–j2
+        # ax_main.plot([pj1[0], pj2[0]],
+        #             [pj1[1], pj2[1]],
+        #             "g-", lw=2)
 
-        # closest point projection
-        d = pj2 - pj1
-        s = np.dot(pi - pj1, d) / (np.dot(d, d) + 1e-12)
-        s = np.clip(s, 0, 1)
-        p_cl = pj1 + s * d
+        # # closest point projection
+        # d = pj2 - pj1
+        # s = np.dot(pi - pj1, d) / (np.dot(d, d) + 1e-12)
+        # s = np.clip(s, 0, 1)
+        # p_cl = pj1 + s * d
 
-        # line from i to closest point
-        ax_main.plot([pi[0], p_cl[0]],
-                    [pi[1], p_cl[1]],
-                    "m--", lw=1.5)
+        # # line from i to closest point
+        # ax_main.plot([pi[0], p_cl[0]],
+        #             [pi[1], p_cl[1]],
+        #             "m--", lw=1.5)
 
-        # normal
-        n = np.array([-d[1], d[0]])
-        n /= (np.linalg.norm(n) + 1e-12)
-        nlen = 0.05 * MultiPixel.pixel_size
-        ax_main.plot([p_cl[0], p_cl[0] + n[0]*nlen],
-                    [p_cl[1], p_cl[1] + n[1]*nlen],
-                    "c-", lw=2)
-        # ===============================
+        # # normal
+        # n = np.array([-d[1], d[0]])
+        # n /= (np.linalg.norm(n) + 1e-12)
+        # nlen = 0.05 * MultiPixel.pixel_size
+        # ax_main.plot([p_cl[0], p_cl[0] + n[0]*nlen],
+        #             [p_cl[1], p_cl[1] + n[1]*nlen],
+        #             "c-", lw=2)
+        # # ===============================
 
         return [points_plot, *spring_lines, time_text, com_point]
 
@@ -364,4 +370,21 @@ if __name__ == "__main__":
         blit=False, interval=interval_ms
     )
 
+    plt.show()
+
+    dt_array = np.diff(t)             # timestep differences (handles non-uniform t)
+    dy = np.diff(com_y) / dt_array    # vertical velocity
+
+    # Time values for dy are midpoint between timesteps
+    t_dy = t[:-1] + dt_array/2
+
+    # Plot vertical velocity
+    plt.figure(figsize=(8, 4))
+    plt.plot(t_dy, dy, color='#EE6677', label='COM vertical velocity (dy)')
+    plt.axhline(y=0, color='k', linestyle='--')
+    plt.xlabel("Time [s]")
+    plt.ylabel("dy [m/s]")
+    plt.title("COM vertical velocity over time")
+    plt.grid(True)
+    plt.legend()
     plt.show()

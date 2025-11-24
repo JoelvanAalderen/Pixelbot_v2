@@ -203,7 +203,7 @@ def plot_omega_phi_over_comdx():
     # plot omega and phi over com dx
 
     # load all files
-    results_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)"
+    results_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "loop_omega_phi"
     pkl_files = list(results_folder.glob("full_solution_of_sim_*_bots_*.pkl"))
 
     all_bot_id = []
@@ -302,18 +302,18 @@ def plot_omega_phi_over_comdx():
 
 def results_table():
 
-    flat_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)"
+    flat_folder = Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "loop_omega_phi"
     other_folders = [
-        Path.cwd() / "solutions" / "worm_grid_search" / "slanted_down_ground" / "0001_010max(natural_omega)",
-        # add more folders
+        # Path.cwd() / "solutions" / "worm_grid_search" / "slanted_down_ground" / "0001_010max(natural_omega)",
+        # Path.cwd() / "solutions" / "worm_grid_search" / "slanted_up_ground" / "0001_010max(natural_omega)",
     ]
 
     # flat ground filtering
     valid_bots = {}  # bot_id -> dict with omega, phi, dx list
     flat_files = list(flat_folder.glob("full_solution_of_sim_*_bots_*.pkl"))
 
-    comy_threshold = 0.03
-    top_n = 10
+    comy_threshold = 0.02
+    top_n = 30
 
     for pkl_file in flat_files:
         full_sol = load_solution(pkl_file)
@@ -338,10 +338,14 @@ def results_table():
                 comy_list.append(cy)
 
             final_dx = comx_list[-1] - comx_list[0]
-            final_comy = comy_list[-1]
 
-            if final_comy >= comy_threshold:
-                continue  # skip invalid bots
+            comy_array = np.array(comy_list)
+
+            # Reject bot if COM_y ever exceeds threshold
+            if np.max(comy_array) > comy_threshold:
+                continue
+
+            
 
             # Omega and Phi for all actuated pixels
             pixel_keys = sorted(bot.pixel_prop.keys())
@@ -397,7 +401,7 @@ def results_table():
         })
 
     # Sort descending by avg_dx
-    avg_dx_info_sorted = sorted(avg_dx_info, key=lambda x: x['avg_dx'], reverse=True)[:top_n]
+    avg_dx_info_sorted = sorted(avg_dx_info, key=lambda x: x['avg_dx'], reverse=True)#[:top_n]
 
     # print table
     header = f"{'Bot ID':>7} | {'Avg dx':>10} | {'Omega':>25} | {'Phi':>25}"
@@ -414,10 +418,131 @@ def results_table():
     return avg_dx_info_sorted
 
 
+    
+def heatmap():
+    terrain_folders = {
+        "Flat": Path.cwd() / "solutions" / "worm_grid_search" / "flat_ground" / "0001_010max(natural_omega)",
+        "Inclined": Path.cwd() / "solutions" / "worm_grid_search" / "slanted_up_ground" / "0001_010max(natural_omega)",
+        "Downhill": Path.cwd() / "solutions" / "worm_grid_search" / "slanted_down_ground" / "0001_010max(natural_omega)",
+    }
+    terrain_data = {}
+
+    dy_threshold = 0.2
+
+
+    for terrain_name, folder in terrain_folders.items():
+        pkl_files = list(folder.glob("full_solution_of_sim_*_bots_*.pkl"))
+        omega_list, phi_list, dx_list, valid_list = [], [], [], []
+
+        for pkl_file in pkl_files:
+            full_sol = load_solution(pkl_file)
+            system = full_sol.system
+            t = full_sol.t
+            q = full_sol.q
+
+            bot_names = sorted([n for n in system.contributions_map if n.startswith("bot_")])
+            bots = [system.contributions_map[n] for n in bot_names]
+
+            for bot in bots:
+                bot_dofs = np.unique(bot.pixelDOF.flatten())
+                comx_list, comy_list = [], []
+                for k in range(len(t)):
+                    q_bot = q[k, bot_dofs]
+                    cx, cy = bot.center_of_mass(t[k], q_bot)
+                    cx += bot.start_p_position[0]
+                    cy += bot.start_p_position[1]
+                    comx_list.append(cx)
+                    comy_list.append(cy)
+
+                comx_array = np.array(comx_list)
+                comy_array = np.array(comy_list)
+
+                dx = comx_array[-1] - comx_array[0]
+
+                dt = np.diff(t)
+                dy = np.diff(comy_array)/dt
+
+                valid = not np.any(np.abs(dy) > dy_threshold)
+
+
+                phi_val = bot.pixel_prop[2]["phi"]                                                        # CHANGE THIS WHEN LOOKING AT DIFFERENT BOT
+                omega_val = bot.pixel_prop[1]["omega"]
+
+                omega_list.append(omega_val)
+                phi_list.append(phi_val)
+                dx_list.append(dx)
+                valid_list.append(valid)
+
+        terrain_data[terrain_name] = {
+            "omega": np.array(omega_list),
+            "phi": np.array(phi_list),
+            "dx": np.array(dx_list),
+            "valid": np.array(valid_list)
+        }
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    axes = axes.flatten()
+    worst_dx_grid = None
+
+    for i, (terrain_name, data) in enumerate(terrain_data.items()):
+        omega_unique = np.unique(data["omega"])
+        phi_unique = np.unique(data["phi"])
+        dx_grid = np.zeros((len(phi_unique), len(omega_unique)))
+
+        for ix, omega_val in enumerate(omega_unique):
+            for iy, phi_val in enumerate(phi_unique):
+                # average dx for bots matching omega, phi
+                mask = (data["omega"] == omega_val) & (data["phi"] == phi_val)
+                if np.any(mask):
+                    if np.any(~data["valid"][mask]):
+                        dx_grid[iy, ix] = np.nan
+                    else:
+                        dx_grid[iy, ix] = np.mean(data["dx"][mask])
+                else:
+                    dx_grid[iy, ix] = np.nan  # empty
+
+        if worst_dx_grid is None:
+            worst_dx_grid = dx_grid.copy()
+        else:
+            worst_dx_grid = np.minimum(worst_dx_grid, dx_grid)
+        
+        dx_grid = np.ma.masked_invalid(dx_grid)
+
+        im = axes[i].imshow(dx_grid, origin='lower', aspect='auto',
+                            extent=[omega_unique.min(), omega_unique.max(),
+                                    phi_unique.min(), phi_unique.max()],
+                            cmap='autumn_r')
+        axes[i].set_title(f"{terrain_name} terrain")
+        axes[i].set_xlabel("Omega [rad/s]")
+        axes[i].set_ylabel("Phi [rad]")
+        fig.colorbar(im, ax=axes[i], label="COM dx [m]")
+
+    # Worst-case heatmap
+    dx_grid = np.ma.masked_invalid(dx_grid)
+    im = axes[3].imshow(worst_dx_grid, origin='lower', aspect='auto',
+                        extent=[omega_unique.min(), omega_unique.max(),
+                                phi_unique.min(), phi_unique.max()],
+                        cmap='autumn_r')
+    axes[3].set_title("Worst-case COM dx")
+    axes[3].set_xlabel("Omega [rad/s]")
+    axes[3].set_ylabel("Phi [rad]")
+    fig.colorbar(im, ax=axes[3], label="COM dx [m]")
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+    return
+
+    
+
+
 
 if __name__ == "__main__":
     # plot_all_sim()
     # plot_omega_phi_over_comdx()
 
-    results_table()
+    # results_table()
+    heatmap()
 
