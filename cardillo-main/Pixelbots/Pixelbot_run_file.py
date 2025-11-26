@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ## Ground points and vectors initialized
     def ground_func(xmin=-1.0, xmax=10.0, nrpoints=10):
         x_vals = np.linspace(xmin, xmax, nrpoints)
-        angle = 10 #16.3 degrees is static for single pixel
+        angle = 0 #16.3 degrees is static for single pixel
         y_vals =  np.tan(np.deg2rad(angle))*x_vals # 0.0006 * np.sin(200 * x_vals)-0.0006 #
         points = [np.array([x, y]) for x, y in zip(x_vals, y_vals)]
 
@@ -49,13 +49,13 @@ if __name__ == "__main__":
     #     [3, 0, 0, 0, 4],
     #     [7, 0, 0, 0, 7]
     # ], dtype=int)
-    # Placement = np.array([
-    #     [0, 0, 0, 0, 0],
-    #     [0, 0, 7, 0, 0],
-    #     [0, 0, 0, 0, 0],
-    #     [0, 0, 0, 0, 0],
-    #     [0, 0, 7, 7, 0]
-    # ], dtype=int)
+    Placement = np.array([
+        [0, 0, 0, 0, 0],
+        [0, 0, 7, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 7, 7, 0]
+    ], dtype=int)
     # Placement = np.array([
     #     [7, 8, 6, 2, 7],
     #     [7, 5, 6, 1, 7],
@@ -77,13 +77,13 @@ if __name__ == "__main__":
     #     [3, 6, 7, 6, 2],
     #     [3, 6, 4, 6, 2],
     # ], dtype=int)
-    Placement = np.array([
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5]
-    ], dtype=int)
+    # Placement = np.array([
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [1, 2, 3, 4, 5]
+    # ], dtype=int)
 
 
     ## Define pixel properties
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     print(t_final)
 
     start_p_position = (0.0, 0.0)
-    start_p_angle = np.deg2rad(10)
+    start_p_angle = np.deg2rad(0)
     bot_name = "bot1"
 
     ## Run combined system
@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
     ## set up system and solver
     system = System()
-    system.add(MultiPixel, Ground_contact)#, mass_mass_contact)
+    system.add(MultiPixel, Ground_contact, mass_mass_contact)
     system.assemble(options=SolverOptions(compute_consistent_initial_conditions=False))   
                                                        
     solver = Moreau(system, t_final, dt)                                  

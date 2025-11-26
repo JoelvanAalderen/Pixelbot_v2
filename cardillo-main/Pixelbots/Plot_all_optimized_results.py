@@ -310,7 +310,7 @@ def results_table():
 
     # flat ground filtering
     valid_bots = {}  # bot_id -> dict with omega, phi, dx list
-    flat_files = list(flat_folder.glob("full_solution_of_sim_*_bots_*.pkl"))
+    flat_files = list(flat_folder.glob("full_solution_of_sim_0_bots_0-3.pkl"))
 
     comy_threshold = 0.02
     top_n = 30

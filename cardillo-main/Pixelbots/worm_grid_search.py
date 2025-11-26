@@ -176,7 +176,7 @@ def run_bot_part(sim_id, bot_part, pixel_size, Placement, mass_values, stiffness
         com_x, com_y = [], []
 
         for frame in range(len(t)):
-            bot_dofs = np.unique(bot.pixelDOF.flatten())
+            bot_dofs = bot.qDOF #np.unique(bot.pixelDOF.flatten())
             q_frame = q[frame]
             q_bot = q_frame[bot_dofs]
             cx, cy = bot.center_of_mass(t[frame], q_bot)
@@ -213,9 +213,9 @@ if __name__ == "__main__":
     total_pixel_types = len(np.unique(get_placement())) - 1
 
 
-    n_cores = 8 #nr of parallel sim
-    n_omega_options = 10
-    n_phi_options = 10
+    n_cores = 1 #nr of parallel sim
+    n_omega_options = 2
+    n_phi_options = 2
 
 
     ## Main setup
@@ -237,8 +237,8 @@ if __name__ == "__main__":
     bot_configs = []
     global_id = 0
     ## make all bot configurations grid_search
-    omega_values = np.linspace(0.001*max(natural_omega), 0.05*max(natural_omega), n_omega_options)
-    phi_values = np.linspace(0, 5, n_phi_options)
+    omega_values = [19.66, 40] #np.linspace(0.001*max(natural_omega), 0.05*max(natural_omega), n_omega_options)
+    phi_values = [0.7, 1.2] #np.linspace(0, 5, n_phi_options)
     for omega in omega_values: #itertools.product(omega_values, repeat=n_pixel_types):
         for phi in phi_values: #itertools.product(phi_values, repeat=n_pixel_types):
             bot_configs.append((global_id, omega, phi))

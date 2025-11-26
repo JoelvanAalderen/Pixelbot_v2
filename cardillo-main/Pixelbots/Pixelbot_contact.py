@@ -162,13 +162,6 @@ class mass_mass_contact:
                     mass_trios.add(trio)
                 
         self.mass_trios = list(mass_trios)
-
-        self.segments = []
-        for (i, j1, j2) in self.mass_trios:
-            pj1 = self.MultiPixelbot.q0[2*j1:2*j1+2]
-            pj2 = self.MultiPixelbot.q0[2*j2:2*j2+2]
-            v = pj2 - pj1
-            self.segments.append((pj1.copy(), v.copy()))
         
 
         self.nr_contact = len(self.mass_trios)
@@ -188,7 +181,7 @@ class mass_mass_contact:
         self.contact_radius = 0.05 * self.pixel_size
 
         self.closest_normals = [np.array([0.0, 1.0]) for _ in range(self.nr_contact)]
-        self.closest_s = [0.0 for _ in range(self.nla_N)]
+        self.closest_s = [0.5 for _ in range(self.nla_N)]
 
 
     def assembler_callback(self):
@@ -203,16 +196,21 @@ class mass_mass_contact:
             p_mass = np.asarray(q[2*i:2*i+2], dtype=float)
             best_dist = np.inf
             best_gap = np.inf
-            best_normal = np.array([0.0, 1.0], dtype=float)
+            best_normal = np.array([0.0, 0.0], dtype=float)
 
-            p0, v = self.segments[k]
+            pj1 = q[2*j1:2*j1+2]
+            pj2 = q[2*j2:2*j2+2]
+            v = pj2 - pj1
+
+
+            
             seg_len = np.linalg.norm(v)
             v_unit = v/seg_len
             normal = np.array([-v_unit[1], v_unit[0]], dtype=float)
             normal /= np.linalg.norm(normal)
 
             # compute fraction along the segment where closest point lies
-            proj = np.dot((p_mass - p0), v)
+            proj = np.dot((p_mass - pj1), v)
             v_len2 = np.dot(v,v)
             s = proj / v_len2
             if s < 0-self.contact_radius or s > 1+self.contact_radius:
@@ -221,7 +219,36 @@ class mass_mass_contact:
                 self.closest_s[k] = 0.5
                 continue
 
-            p_closest = p0 + s * v
+            # compute cross products
+            pixel_verts = None
+            for verts in self.MultiPixelbot.bot_global_mass:
+                if j1 in verts and j2 in verts:
+                    pixel_verts = verts
+                    break
+            
+            cross_vals = []
+            for idx in range(4):
+                mA = pixel_verts[idx]
+                mB = pixel_verts[(idx+1) % 4]
+
+                A = q[2*mA:2*mA+2]
+                B = q[2*mB:2*mB+2]
+
+                edge = B - A
+                to_point = p_mass - A
+                cross_vals.append(np.cross(edge, to_point))
+
+            cross_vals = np.array(cross_vals)
+
+            if not (np.all(cross_vals >= 0) or np.all(cross_vals <= 0)):
+                gaps[k] = np.inf
+                self.closest_normals[k] = np.array([0.0, 1.0])
+                self.closest_s[k] = 0.5
+                continue
+
+
+            # continue gap calc
+            p_closest = pj1 + s * v
 
             d_vec = p_mass - p_closest
             dist = np.linalg.norm(d_vec)
