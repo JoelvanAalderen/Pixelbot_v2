@@ -213,7 +213,7 @@ class mass_mass_contact:
             proj = np.dot((p_mass - pj1), v)
             v_len2 = np.dot(v,v)
             s = proj / v_len2
-            if s < 0-self.contact_radius or s > 1+self.contact_radius:
+            if s < 0 or s > 1:
                 gaps[k] = np.inf
                 self.closest_normals[k] = np.array([0.0, 1.0])
                 self.closest_s[k] = 0.5
